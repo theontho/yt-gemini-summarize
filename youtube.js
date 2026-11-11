@@ -68,7 +68,7 @@
     ytd-watch-metadata #title h1.yts-inline > yt-formatted-string { display: inline; }
     /* No negative margins: the title clips at its line box (overflow: hidden), so the button must stay
        inside it; middle alignment grows the line box if the button is taller than the text. */
-    #yts-page-button.yts-inline { display: inline-block; vertical-align: middle; margin: 0 0 0 10px; }
+    #yts-page-button.yts-inline { display: inline-block; vertical-align: middle; margin: 2px 0 4px 10px; }
   `;
   document.documentElement.appendChild(style);
 
@@ -79,6 +79,7 @@
     if (pageBtn.parentElement === document.body) return;
     pageBtn.removeAttribute("style");
     pageBtn.className = "";
+    delete pageBtn.dataset.inline;
     pageBtn.dataset.size = "large";
     Object.assign(pageBtn.style, { position: "fixed", top: "68px", right: "24px", zIndex: "2300" });
     document.body.appendChild(pageBtn);
@@ -96,6 +97,7 @@
           pageBtn.removeAttribute("style");
           delete pageBtn.dataset.size;
           pageBtn.className = "yts-inline";
+          pageBtn.dataset.inline = "";
           h1.appendChild(pageBtn);
         }
         return;

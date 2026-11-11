@@ -22,6 +22,9 @@
       border-radius: 50%; font-size: 13px;
     }
     :host([data-compact]) .label { display: none; }
+    /* Inside the watch-page title, which clips at its box: keep shadow and hover within the host's margins. */
+    :host([data-inline]) button { box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+    :host([data-inline]) button:hover { transform: none; filter: brightness(1.1); }
     :host([data-dim]) button:hover { opacity: 1; }
   `;
 

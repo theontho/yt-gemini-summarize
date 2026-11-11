@@ -125,6 +125,23 @@ try {
     return { parent: h.tagName, inside: br.top >= hr.top - 4 && br.bottom <= hr.bottom + 4 && br.height > 0 };
   });
   check("watch page button inline after title", where?.parent === "H1" && where.inside, JSON.stringify(where));
+  // The title clips at its box (overflow: hidden). Clipping shows up in the shadow bands just above and below
+  // the button, so those must render the same with the title's clipping turned off.
+  const bands = await page.evaluate(() => {
+    const r = document.getElementById("yts-page-button")?.getBoundingClientRect();
+    return r && [
+      { x: r.x - 6, y: r.y - 6, width: r.width + 12, height: 6 },
+      { x: r.x - 6, y: r.bottom, width: r.width + 12, height: 6 },
+    ];
+  });
+  if (bands) {
+    const shoot = () => Promise.all(bands.map((clip) => page.screenshot({ clip })));
+    const clipped = await shoot();
+    await page.evaluate(() => document.querySelector("h1.yts-inline").style.setProperty("overflow", "visible", "important"));
+    const unclipped = await shoot();
+    await page.evaluate(() => document.querySelector("h1.yts-inline").style.removeProperty("overflow"));
+    check("title button not visually clipped", clipped.every((b, k) => Buffer.compare(b, unclipped[k]) === 0));
+  }
   const compact = await page.evaluate(() =>
     [...document.querySelectorAll("yts-summarize[data-compact]")].map((b) => {
       const r = b.getBoundingClientRect(), a = b.parentElement.getBoundingClientRect();
