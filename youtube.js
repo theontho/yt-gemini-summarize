@@ -1,6 +1,12 @@
 // youtube.com: buttons on the watch page, Shorts, and every video thumbnail in lists/grids/search/sidebars.
 (() => {
-  const { makeButton } = YTSUI;
+  const { makeButton, api } = YTSUI;
+
+  api.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type !== "findVideo") return false;
+    sendResponse(YTS.canonicalUrl(location.href));
+    return false;
+  });
   const THUMB_SEL = 'a[href*="/watch?v="], a[href*="/shorts/"], a[href*="/live/"]';
   const IMG_SEL = "img, yt-image, yt-thumbnail-view-model, ytd-thumbnail, .yt-core-image";
   const COMPACT_MAX_WIDTH = 240;
@@ -60,7 +66,9 @@
   const style = document.createElement("style");
   style.textContent = `
     ytd-watch-metadata #title h1.yts-inline > yt-formatted-string { display: inline; }
-    #yts-page-button.yts-inline { display: inline-block; vertical-align: middle; margin: -4px 0 0 10px; }
+    /* No negative margins: the title clips at its line box (overflow: hidden), so the button must stay
+       inside it; middle alignment grows the line box if the button is taller than the text. */
+    #yts-page-button.yts-inline { display: inline-block; vertical-align: middle; margin: 0 0 0 10px; }
   `;
   document.documentElement.appendChild(style);
 

@@ -4,7 +4,7 @@ A browser extension for Chrome, Brave, Edge and Firefox that adds a **✦ Summar
 Clicking it opens a new Gemini tab, starts a fresh chat and sends
 `summarize https://www.youtube.com/watch?v=<id>` for you.
 
-![Summarize button after a YouTube title, round icons on sidebar thumbnails, and the toolbar popup](docs/screenshot.png)
+![The Summarize button after a YouTube video title, with the toolbar popup open](docs/screenshot.png)
 
 ## Where the button appears
 
@@ -67,7 +67,7 @@ npm test                 # Playwright Chromium end-to-end: YouTube, other sites,
 npm run test:firefox     # Selenium with real Firefox
 npm run lint             # web-ext lint
 npm run build            # dist/*.zip for stores / signing
-node test/screenshots.mjs  # raw shots for docs/screenshot.png
+node test/screenshots.mjs  # raw shots for docs/screenshot.png (recommendations hidden)
 ```
 
 YouTube and Gemini change their pages often; the selectors live in `youtube.js` and `gemini.js`.
