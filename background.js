@@ -30,7 +30,7 @@ async function settings() {
 async function summarize(rawUrl, fromTab) {
   const url = YTS.canonicalUrl(rawUrl);
   if (!url) return false;
-  const { template, autoSend } = await settings();
+  const { template, model, autoSend } = await settings();
   const prompt = (template || YTS.DEFAULTS.template).includes("{url}")
     ? template.replaceAll("{url}", url)
     : `${template} ${url}`;
@@ -41,13 +41,39 @@ async function summarize(rawUrl, fromTab) {
     if (fromTab.windowId >= 0) props.windowId = fromTab.windowId;
   }
   const tab = await api.tabs.create(props);
-  await setPending(tab.id, { prompt, autoSend, created: Date.now() });
+  await setPending(tab.id, { prompt, model, autoSend, created: Date.now() });
+  await api.storage.local.set({
+    lastRun: { url, prompt, model, autoSend, tabId: tab.id, startedAt: Date.now(), stage: "opening" },
+  });
   return true;
+}
+
+// Status reported by gemini.js for the tab it is driving.
+async function updateRun(tabId, patch) {
+  const { lastRun } = await api.storage.local.get("lastRun");
+  if (!lastRun || lastRun.tabId !== tabId) return;
+  await api.storage.local.set({ lastRun: { ...lastRun, ...patch, updatedAt: Date.now() } });
+}
+
+async function tabForMessage(msg, sender) {
+  if (sender.tab) return sender.tab;
+  if (msg.tabId >= 0) return api.tabs.get(msg.tabId).catch(() => undefined);
+  return undefined;
 }
 
 api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === "summarize") {
-    summarize(msg.url, sender.tab).then(sendResponse, () => sendResponse(false));
+    tabForMessage(msg, sender)
+      .then((tab) => summarize(msg.url, tab))
+      .then(sendResponse, () => sendResponse(false));
+    return true;
+  }
+  if (msg?.type === "status" && sender.tab) {
+    updateRun(sender.tab.id, msg.patch).then(() => sendResponse(true), () => sendResponse(false));
+    return true;
+  }
+  if (msg?.type === "models" && Array.isArray(msg.list)) {
+    api.storage.local.set({ models: { list: msg.list, seenAt: Date.now() } }).then(() => sendResponse(true));
     return true;
   }
   if (msg?.type === "peekPrompt" && sender.tab) {
@@ -57,9 +83,6 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === "ackPrompt" && sender.tab) {
     clearPending(sender.tab.id).then(() => sendResponse(true), () => sendResponse(false));
     return true;
-  }
-  if (msg?.type === "openOptions") {
-    api.runtime.openOptionsPage();
   }
   return false;
 });
@@ -98,20 +121,4 @@ api.contextMenus.onClicked.addListener((info, tab) => {
     : [info.frameUrl, info.pageUrl, tab?.url];
   const url = candidates.find((c) => YTS.canonicalUrl(c));
   if (url) summarize(url, tab);
-});
-
-async function flashBadge(tabId, text) {
-  await api.action.setBadgeText({ tabId, text });
-  setTimeout(() => api.action.setBadgeText({ tabId, text: "" }), 2500);
-}
-
-api.action.onClicked.addListener(async (tab) => {
-  if (await summarize(tab.url, tab)) return;
-  try {
-    const found = await api.tabs.sendMessage(tab.id, { type: "findVideo" });
-    if (found && (await summarize(found, tab))) return;
-  } catch {
-    // No content script in this tab (e.g. browser pages).
-  }
-  flashBadge(tab.id, "none");
 });

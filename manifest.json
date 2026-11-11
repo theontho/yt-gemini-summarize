@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube → Gemini Summarize",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Adds a Summarize button to YouTube videos, thumbnails, embeds and links that opens a new Gemini chat to summarize the video.",
   "icons": {
     "16": "icons/icon16.png",
@@ -14,7 +14,8 @@
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"
-    }
+    },
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js",
@@ -29,7 +30,7 @@
     "activeTab"
   ],
   "options_ui": {
-    "page": "options.html",
+    "page": "popup.html",
     "open_in_tab": false
   },
   "content_scripts": [

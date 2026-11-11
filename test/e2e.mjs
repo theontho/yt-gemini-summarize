@@ -63,19 +63,56 @@ try {
     .innerText({ timeout: 2000 })
     .catch(() => null);
   const userMsg = await gem.locator("user-query, .query-text").first().innerText({ timeout: 2000 }).catch(() => null);
+  const mode = await gem.locator('[data-test-id="bard-mode-menu-button"]').getAttribute("aria-label").catch(() => null);
+  check("Gemini model set to Flash-Lite", /currently Flash-Lite/i.test(mode || ""), mode);
   console.log(`INFO gemini url=${gem.url()} editor=${JSON.stringify(editorText)}`);
   check("Gemini chat started with summarize prompt", /summarize https:\/\/www\.youtube\.com\/watch\?v=/.test(userMsg || ""), userMsg?.split("\n").pop());
   await gem.screenshot({ path: path.join(out, "gemini.png") }).catch(() => {});
   await gem.close();
+
+  await sw.evaluate(() => chrome.storage.sync.set({ model: "Flash" }));
+  const [gem2] = await Promise.all([ctx.waitForEvent("page"), page.locator("yts-summarize").nth(1).click()]);
+  await gem2.waitForTimeout(12000);
+  const mode2 = await gem2.locator('[data-test-id="bard-mode-menu-button"]').getAttribute("aria-label").catch(() => null);
+  const sent2 = await gem2.locator("user-query, .query-text").first().innerText({ timeout: 2000 }).catch(() => "");
+  const run2 = await sw.evaluate(() => chrome.storage.local.get("lastRun").then((r) => r.lastRun));
+  // Signed-out Gemini only enables Flash-Lite, so "Flash" must be reported unavailable and still send.
+  check(
+    "unavailable model falls back, still sends, status recorded",
+    run2?.stage === "sent" && ["unavailable", "selected"].includes(run2?.modelResult) && /summarize/.test(sent2),
+    `${run2?.modelResult} / ${mode2}`,
+  );
+  const extId = new URL(sw.url()).host;
+  const pop = await ctx.newPage();
+  await pop.setViewportSize({ width: 360, height: 640 });
+  await pop.goto(`chrome-extension://${extId}/popup.html`);
+  await pop.waitForTimeout(800);
+  const popText = await pop.locator("body").innerText();
+  const opts = await pop.locator("#model option").allTextContents();
+  check("popup shows last run + model list", /Sent/.test(popText) && opts.some((o) => /Flash-Lite/.test(o)), opts.join(" | "));
+  await pop.screenshot({ path: path.join(out, "popup.png") });
+  await pop.close();
+  await gem2.close();
+  await sw.evaluate(() => chrome.storage.sync.remove("model"));
 
   await page.goto("https://www.youtube.com/watch?v=jNQXAC9IVRw", { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#yts-page-button", { timeout: 20000 }).catch(() => {});
   await page.waitForTimeout(3000);
   const where = await page.evaluate(() => {
     const b = document.getElementById("yts-page-button");
-    return b?.parentElement ? `${b.parentElement.tagName}#${b.parentElement.id}` : null;
+    const h = b?.parentElement;
+    if (!h) return null;
+    const br = b.getBoundingClientRect(), hr = h.getBoundingClientRect();
+    return { parent: h.tagName, inside: br.top >= hr.top - 4 && br.bottom <= hr.bottom + 4 && br.height > 0 };
   });
-  check("watch page button placed", !!where, where);
+  check("watch page button inline after title", where?.parent === "H1" && where.inside, JSON.stringify(where));
+  const compact = await page.evaluate(() =>
+    [...document.querySelectorAll("yts-summarize[data-compact]")].map((b) => {
+      const r = b.getBoundingClientRect(), a = b.parentElement.getBoundingClientRect();
+      return { w: Math.round(r.width), bottomLeft: a.bottom - r.bottom < 12 && r.left - a.left < 12 };
+    }),
+  );
+  check("sidebar thumbnails get compact bottom-left icon", compact.length > 3 && compact.every((c) => c.w <= 26 && c.bottomLeft), `${compact.length} compact`);
   console.log(`INFO watch page sidebar buttons=${await page.locator("yts-summarize").count()}`);
   await page.screenshot({ path: path.join(out, "watch.png") });
 

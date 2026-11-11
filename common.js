@@ -31,7 +31,7 @@
     return id ? watchUrl(id) : null;
   }
 
-  const DEFAULTS = { template: "summarize {url}", autoSend: true, otherSites: true };
+  const DEFAULTS = { template: "summarize {url}", model: "Flash-Lite", autoSend: true, otherSites: true };
 
   globalThis.YTS = { videoId, watchUrl, canonicalUrl, DEFAULTS };
 })();

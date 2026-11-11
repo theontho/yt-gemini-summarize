@@ -17,6 +17,11 @@
     button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
     :host([data-size="large"]) button { font-size: 14px; padding: 8px 14px; }
     :host([data-dim]) button { opacity: .78; }
+    :host([data-compact]) button {
+      width: 24px; height: 24px; padding: 0; gap: 0; justify-content: center;
+      border-radius: 50%; font-size: 13px;
+    }
+    :host([data-compact]) .label { display: none; }
     :host([data-dim]) button:hover { opacity: 1; }
   `;
 
@@ -44,7 +49,7 @@
     const button = document.createElement("button");
     button.type = "button";
     button.title = "Summarize with Gemini";
-    button.textContent = `✦ ${label}`;
+    button.append("✦", Object.assign(document.createElement("span"), { className: "label", textContent: label }));
     root.append(style, button);
     for (const type of ["pointerdown", "mousedown", "mouseup", "pointerup", "touchstart", "dblclick"]) {
       host.addEventListener(type, (e) => e.stopPropagation(), true);

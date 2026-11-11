@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>YouTube → Gemini Summarize</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon32.png" alt="" width="20" height="20">
+    <h1>YouTube → Gemini</h1>
+  </header>
+
+  <section id="current">
+    <div class="row">
+      <div class="grow">
+        <div class="label">This tab</div>
+        <div id="video" class="value muted">Looking for a video…</div>
+      </div>
+      <button id="summarize" class="primary" disabled>✦ Summarize</button>
+    </div>
+  </section>
+
+  <section id="status">
+    <div class="label">Last summary</div>
+    <div id="lastRun" class="value muted">None yet</div>
+  </section>
+
+  <section id="settings">
+    <label>Model
+      <select id="model"></select>
+    </label>
+    <input type="text" id="customModel" placeholder="Model name as shown in Gemini, e.g. Pro" hidden>
+    <div id="modelNote" class="note"></div>
+    <label>Prompt <small>{url} = video link</small>
+      <input type="text" id="template">
+    </label>
+    <label class="check"><input type="checkbox" id="autoSend"> Send automatically</label>
+    <label class="check"><input type="checkbox" id="otherSites"> Buttons on links and embeds on other sites</label>
+    <div class="foot"><span id="saved"></span><button id="reset" class="link">Reset defaults</button></div>
+  </section>
+
+  <script src="common.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
