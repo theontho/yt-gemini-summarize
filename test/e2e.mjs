@@ -46,6 +46,25 @@ try {
   check("search result thumbnails get buttons", thumbs > 5, `${thumbs} buttons`);
   await page.screenshot({ path: path.join(out, "search.png") });
 
+  const shortLink = page.locator('a[href*="/shorts/"]:has(yts-summarize)').first();
+  if (await shortLink.count()) {
+    await shortLink.scrollIntoViewIfNeeded();
+    await shortLink.hover();
+    await page.waitForTimeout(3500);
+    const onTop = await page.evaluate(() => {
+      const b = document.querySelector("ytd-video-preview > yts-summarize");
+      if (!b || b.style.display === "none") return "no preview button";
+      const r = b.getBoundingClientRect();
+      const e = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return e === b || b.contains(e);
+    });
+    check("button stays visible over Shorts hover autoplay", onTop === true, String(onTop));
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => scrollTo(0, 0));
+  } else {
+    console.log("INFO no Shorts in search results; skipped hover-autoplay check");
+  }
+
   const before = page.url();
   const [gem] = await Promise.all([
     ctx.waitForEvent("page", { timeout: 10000 }),

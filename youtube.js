@@ -12,10 +12,12 @@
 
   // Small thumbnails (watch-page sidebar, Shorts shelves) get a round icon in the bottom-left corner,
   // clear of the duration badge (bottom-right) and the title overlay on Shorts (top).
-  function layoutThumbButton(a, btn) {
-    const width = a.clientWidth;
+  function isCompact(a, width) {
+    return width < COMPACT_MAX_WIDTH || a.pathname.startsWith("/shorts/") || !!a.closest(COMPACT_CONTEXT_SEL);
+  }
+
+  function layoutThumbButton(btn, width, compact) {
     if (!width) return;
-    const compact = width < COMPACT_MAX_WIDTH || a.pathname.startsWith("/shorts/") || !!a.closest(COMPACT_CONTEXT_SEL);
     if (compact === btn.hasAttribute("data-compact") && btn.style.left) return;
     btn.toggleAttribute("data-compact", compact);
     Object.assign(btn.style, compact
@@ -33,7 +35,25 @@
         Object.assign(btn.style, { position: "absolute", zIndex: "50" });
         a.appendChild(btn);
       }
-      layoutThumbButton(a, btn);
+      layoutThumbButton(btn, a.clientWidth, isCompact(a, a.clientWidth));
+    }
+  }
+
+  // Hover autoplay draws a separate floating player (ytd-video-preview) over Shorts thumbnails,
+  // covering the thumbnail's button, so the preview gets its own button for whatever it is playing.
+  const PREVIEW_LINK_SEL = 'a.ytdVideoPreviewMediaContainerLink[href], a[href*="/watch?v="], a[href*="/shorts/"]';
+  function addPreviewButtons() {
+    for (const preview of document.querySelectorAll("ytd-video-preview")) {
+      const link = () => preview.querySelector(PREVIEW_LINK_SEL);
+      let btn = preview.querySelector(":scope > yts-summarize");
+      if (!btn) {
+        btn = makeButton(() => link()?.href || "", { dim: true });
+        Object.assign(btn.style, { position: "absolute", zIndex: "2100" });
+        preview.appendChild(btn);
+      }
+      const a = link();
+      btn.style.display = a && YTS.canonicalUrl(a.href) ? "" : "none";
+      if (a) layoutThumbButton(btn, preview.clientWidth, isCompact(a, preview.clientWidth));
     }
   }
 
@@ -81,6 +101,7 @@
   function scan() {
     scheduled = false;
     addThumbButtons();
+    addPreviewButtons();
     placePageButton();
   }
   function schedule() {
@@ -93,5 +114,6 @@
   document.addEventListener("yt-navigate-finish", schedule);
   window.addEventListener("popstate", schedule);
   window.addEventListener("resize", schedule);
+  document.addEventListener("mouseover", (e) => e.target.closest?.(THUMB_SEL) && schedule(), { passive: true });
   schedule();
 })();

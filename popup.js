@@ -124,7 +124,9 @@ async function renderLastRun() {
 }
 
 async function detectVideo() {
-  [activeTab] = await api.tabs.query({ active: true, currentWindow: true });
+  // ?tab=<id> targets a specific tab when the popup is opened as a page (tests, screenshots).
+  const forced = Number(new URLSearchParams(location.search).get("tab"));
+  [activeTab] = forced ? [await api.tabs.get(forced)] : await api.tabs.query({ active: true, currentWindow: true });
   videoUrl = YTS.canonicalUrl(activeTab?.url);
   if (!videoUrl && activeTab?.id >= 0) {
     try {

@@ -3,19 +3,20 @@
   "version": "1.0.0",
   "description": "Browser extension: summarize YouTube videos with Gemini",
   "scripts": {
-    "build": "web-ext build -s . -a dist -o --ignore-files \"node_modules/**\" \"test/**\" \"test-results/**\" \"package*.json\" README.md",
+    "build": "web-ext build -s . -a dist -o --ignore-files \"node_modules/**\" test \"test/**\" test-results \"test-results/**\" \"package*.json\" README.md LICENSE \"docs/**\"",
     "lint": "web-ext lint -s . --ignore-files \"node_modules/**\" \"test/**\" \"test-results/**\" \"package*.json\"",
     "test": "node test/e2e.mjs",
     "test:firefox": "npm run build && node test/firefox.mjs"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
     "playwright": "^1.65.0",
     "selenium-webdriver": "^4.52.0",
     "web-ext": "^10.8.0"
   },
-  "private": true
+  "private": true,
+  "repository": "github:theontho/yt-gemini-summarize"
 }
