@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>YouTube → Gemini Summarize</title>
+  <style>
+    body { font: 14px system-ui, sans-serif; margin: 16px; min-width: 360px; }
+    label { display: block; margin: 10px 0; }
+    input[type=text] { width: 100%; box-sizing: border-box; padding: 6px; }
+    small { color: #666; }
+    #saved { color: #188038; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <label>Prompt template <small>({url} is replaced by the video link)</small>
+    <input type="text" id="template">
+  </label>
+  <label><input type="checkbox" id="autoSend"> Send the prompt automatically</label>
+  <label><input type="checkbox" id="otherSites"> Show buttons on YouTube links and embeds on other websites</label>
+  <button id="save">Save</button><span id="saved"></span>
+  <script src="common.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

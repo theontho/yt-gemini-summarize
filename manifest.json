@@ -1,0 +1,106 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube → Gemini Summarize",
+  "version": "1.0.0",
+  "description": "Adds a Summarize button to YouTube videos, thumbnails, embeds and links that opens a new Gemini chat to summarize the video.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Summarize this video with Gemini",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "scripts": [
+      "common.js",
+      "background.js"
+    ]
+  },
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab"
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.youtube.com/*",
+        "*://m.youtube.com/*"
+      ],
+      "exclude_matches": [
+        "*://*.youtube.com/embed/*"
+      ],
+      "js": [
+        "common.js",
+        "ui.js",
+        "youtube.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://*.youtube.com/embed/*",
+        "*://*.youtube-nocookie.com/embed/*"
+      ],
+      "js": [
+        "common.js",
+        "ui.js",
+        "embed.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "exclude_matches": [
+        "*://*.youtube.com/*",
+        "*://*.youtube-nocookie.com/*",
+        "*://gemini.google.com/*"
+      ],
+      "js": [
+        "common.js",
+        "ui.js",
+        "links.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://gemini.google.com/*"
+      ],
+      "js": [
+        "gemini.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "yt-gemini-summarize@theontho",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
+    }
+  }
+}
